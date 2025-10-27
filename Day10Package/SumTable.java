@@ -11,5 +11,7 @@ public class SumTable {
 //             sum=m+m;
         }
         System.out.println(sum);
-    }
+    }  
+    
 }
+
