@@ -12,6 +12,6 @@ public class SumTable {
         }
         System.out.println(sum);
     }  
-    
 }
+
 
