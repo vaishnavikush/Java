@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e94560;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+
+    /* Header */
+    .leaderboard-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+    }
+
+    .leaderboard-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #e94560, #f39c12, #e74c3c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+
+    .leaderboard-subtitle {
+      color: #a8b2d1;
+      font-size: 1rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 20px;
+      justify-content: center;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background: rgba(233, 69, 96, 0.1);
+      border: 2px solid rgba(233, 69, 96, 0.3);
+      border-radius: 25px;
+      color: #a8b2d1;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .tab-btn:hover {
+      background: rgba(233, 69, 96, 0.2);
+      border-color: #e94560;
+      color: #e94560;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, #e94560, #e74c3c);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 6px 20px rgba(233, 69, 96, 0.5);
+    }
+
+    /* Sort Box */
+    .sort-box {
+      margin: 20px auto 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      background: rgba(22, 33, 62, 0.8);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+
+    .sort-box label {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #a8b2d1;
+    }
+
+    .sort-select {
+      padding: 12px 40px 12px 20px;
+      font-size: 1rem;
+      border-radius: 25px;
+      border: 2px solid rgba(233, 69, 96, 0.3);
+      background: #16213e;
+      color: #e94560;
+      cursor: pointer;
+      font-weight: 600;
+      appearance: none;
+      transition: all 0.3s ease;
+      background-image: url("data:image/svg+xml;utf8,<svg fill='%23e94560' height='24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+    }
+
+    .sort-select:hover,
+    .sort-select:focus {
+      outline: none;
+      border-color: #e94560;
+      box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
+    }
+
+    /* Content Containers */
+    .container-content {
+      display: none;
+    }
+
+    .container-content.active {
+      display: block;
+    }
+
+    /* Top 3 Winners Section */
+    .top-winners-section {
+      padding: 30px 0;
+      margin-bottom: 40px;
+    }
+
+    .winners-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+
+    @media (min-width: 768px) {
+      .winners-wrapper {
+        flex-wrap: nowrap;
+      }
+    }
+
+    .winner-card {
+      background: rgba(22, 33, 62, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 25px;
+      padding: 30px 25px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      transition: all 0.4s ease;
+      position: relative;
+      flex: 1;
+      border: 3px solid transparent;
+      min-width: 200px;
+      max-width: 250px;
+    }
+
+    .winner-card::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      background: linear-gradient(135deg, #e94560, #f39c12, #e74c3c);
+      border-radius: 25px;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .winner-card:hover::before {
+      opacity: 1;
+    }
+
+    .winner-card:hover {
+      transform: translateY(-15px) scale(1.05);
+      box-shadow: 0 20px 50px rgba(233, 69, 96, 0.4);
+    }
+
+    /* Podium arrangement */
+    .winner-card.position-1 {
+      order: 2;
+      transform: translateY(-30px) scale(1.15);
+      z-index: 3;
+    }
+
+    .winner-card.position-1:hover {
+      transform: translateY(-45px) scale(1.2);
+    }
+
+    .winner-card.position-2 {
+      order: 1;
+      transform: translateY(0);
+      z-index: 2;
+    }
+
+    .winner-card.position-3 {
+      order: 3;
+      transform: translateY(10px);
+      z-index: 1;
+    }
+
+    @media (max-width: 767px) {
+      .winner-card.position-1,
+      .winner-card.position-2,
+      .winner-card.position-3 {
+        order: initial;
+        transform: none !important;
+      }
+
+      .winner-card:hover {
+        transform: translateY(-10px) scale(1.02) !important;
+      }
+    }
+
+    .position-number {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.4rem;
+      color: white;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .position-1 .position-number {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      animation: goldShine 2s ease-in-out infinite;
+    }
+
+    .position-2 .position-number {
+      background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+    }
+
+    .position-3 .position-number {
+      background: linear-gradient(135deg, #CD7F32, #B87333);
+    }
+
+    @keyframes goldShine {
+      0%, 100% {
+        box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+      }
+      50% {
+        box-shadow: 0 8px 30px rgba(255, 215, 0, 0.9);
+      }
+    }
+
+    .winner-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 0 auto 15px;
+      border: 4px solid transparent;
+      background: linear-gradient(#16213e, #16213e) padding-box,
+                  linear-gradient(135deg, #e94560, #f39c12) border-box;
+      transition: all 0.3s ease;
+    }
+
+    .winner-card.position-1 .winner-avatar {
+      width: 140px;
+      height: 140px;
+      border-width: 5px;
+    }
+
+    .winner-avatar:hover {
+      transform: scale(1.08) rotate(3deg);
+    }
+
+    .winner-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .winner-name {
+      font-weight: 700;
+      color: #e94560;
+      margin-top: 10px;
+      font-size: 1.1rem;
+      word-break: break-word;
+    }
+
+    .winner-card.position-1 .winner-name {
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, #e94560, #f39c12);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .winner-role {
+      font-size: 0.85rem;
+      color: #a8b2d1;
+      margin-top: 5px;
+    }
+
+    .winner-stars {
+      color: #f39c12;
+      font-size: 1.1rem;
+      margin-top: 8px;
+      letter-spacing: 2px;
+    }
+
+    .winner-rating {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #e94560;
+      margin-top: 5px;
+    }
+
+    /* Rest of Leaderboard */
+    .rest-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .section-divider {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #e94560;
+      margin: 30px 0;
+      position: relative;
+      padding-bottom: 15px;
+    }
+
+    .section-divider::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, #e94560, #f39c12, #e74c3c);
+      border-radius: 2px;
+    }
+
+    .rank-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      border-radius: 20px;
+      background: rgba(22, 33, 62, 0.8);
+      backdrop-filter: blur(10px);
+      color: #a8b2d1;
+      font-size: 16px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      position: relative;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .rank-row:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(233, 69, 96, 0.3);
+      border-color: rgba(233, 69, 96, 0.5);
+    }
+
+    .rank-row::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(135deg, #e94560, #f39c12);
+      border-radius: 20px 0 0 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .rank-row:hover::before {
+      opacity: 1;
+    }
+
+    .profile-img {
+      width: 85px;
+      height: 85px;
+      border-radius: 15px;
+      object-fit: cover;
+      border: 3px solid transparent;
+      background: linear-gradient(#16213e, #16213e) padding-box,
+                  linear-gradient(135deg, #e94560, #f39c12) border-box;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .rank-row:hover .profile-img {
+      transform: scale(1.05) rotate(2deg);
+    }
+
+    .details {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    .name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #e94560;
+      margin-bottom: 5px;
+      word-wrap: break-word;
+    }
+
+    .role {
+      font-size: 0.9rem;
+      color: #a8b2d1;
+      margin-bottom: 8px;
+    }
+
+    .stars {
+      color: #f39c12;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+      letter-spacing: 2px;
+    }
+
+    .rating-number {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #e94560;
+    }
+
+    .medal {
+      position: absolute;
+      right: 20px;
+      top: 15px;
+      font-size: 2.5rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .leaderboard-title {
+        font-size: 2rem;
+      }
+
+      .sort-box {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .winner-card {
+        max-width: 100%;
+      }
+
+      .rank-row {
+        gap: 12px;
+        padding: 15px;
+      }
+
+      .profile-img {
+        width: 70px;
+        height: 70px;
+      }
+
+      .name {
+        font-size: 1.1rem;
+      }
+
+      .medal {
+        font-size: 2rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .tabs {
+        gap: 8px;
+      }
+
+      .tab-btn {
+        padding: 10px 18px;
+        font-size: 14px;
+      }
+
+      .winner-avatar {
+        width: 100px;
+        height: 100px;
+      }
+
+      .winner-card.position-1 .winner-avatar {
+        width: 120px;
+        height: 120px;
+      }
+
+      .profile-img {
+        width: 60px;
+        height: 60px;
+      }
+
+      .medal {
+        right: 10px;
+        font-size: 1.8rem;
+      }
+    }
+
+    /* Animation */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .rank-row {
+      animation: slideIn 0.4s ease-out;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrapper" th:attr="data-tab=${tab}">
+
+  <!-- Header -->
+  <div class="leaderboard-header">
+    <h1 class="leaderboard-title">🏆 Leaderboard</h1>
+    <p class="leaderboard-subtitle">Top rated movies and talent in the industry</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <a class="tab-btn"
+       th:classappend="${tab=='movies'} ? ' active' : ''"
+       th:href="@{/showpeoplerevi(tab='movies', sort=${sort})}">
+      🎬 Movies
+    </a>
+
+    <a class="tab-btn"
+       th:classappend="${tab=='actor'} ? ' active' : ''"
+       th:href="@{/showpeoplerevi(tab='actor', sort=${sort})}">
+      🎭 Actors
+    </a>
+
+    <a class="tab-btn"
+       th:classappend="${tab=='actress'} ? ' active' : ''"
+       th:href="@{/showpeoplerevi(tab='actress', sort=${sort})}">
+      👩‍🦰 Actresses
+    </a>
+
+    <a class="tab-btn"
+       th:classappend="${tab=='director'} ? ' active' : ''"
+       th:href="@{/showpeoplerevi(tab='director', sort=${sort})}">
+      🎥 Directors
+    </a>
+
+    <a class="tab-btn"
+       th:classappend="${tab=='music'} ? ' active' : ''"
+       th:href="@{/showpeoplerevi(tab='music', sort=${sort})}">
+      🎧 Music Directors
+    </a>
+  </div>
+
+  <!-- Sort Dropdown -->
+  <div class="sort-box">
+    <label for="sort">Sort By:</label>
+    <select id="sort" class="sort-select" onchange="chooseSort()">
+      <option value="rating_desc" th:selected="${sort=='rating_desc'}">Rating (High → Low)</option>
+      <option value="rating_asc" th:selected="${sort=='rating_asc'}">Rating (Low → High)</option>
+      <option value="name_asc" th:selected="${sort=='name_asc'}">Name (A → Z)</option>
+      <option value="name_desc" th:selected="${sort=='name_desc'}">Name (Z → A)</option>
+    </select>
+  </div>
+
+  <!-- MOVIES -->
+  <div id="movies" class="container-content" th:classappend="${tab=='movies'} ? ' active' : ''">
+    <!-- Top 3 Winners -->
+    <div class="top-winners-section">
+      <div class="winners-wrapper">
+        <div th:each="m, iterStat : ${movieshow}" th:if="${iterStat.index < 3}" class="winner-card"
+             th:classappend="${iterStat.index == 0 ? ' position-1' : iterStat.index == 1 ? ' position-2'  : ' position-3' }">
+          <div class="position-number" th:text="${iterStat.index + 1}"></div>
+          <div class="winner-avatar">
+            <img th:src="@{/getimagesok/{id}(id=${m.movieId})}" alt="movie image">
+          </div>
+          <div class="winner-name" th:text="${m.movieName}"></div>
+          <div class="winner-role">
+            <span th:text="${m.genre}"></span> | <span th:text="${m.language}"></span>
+          </div>
+          <div class="winner-stars">
+            <span th:utext="${#strings.repeat('★', movieAvgRatings[m.movieId].intValue())}"></span>
+            <span th:utext="${#strings.repeat('☆', 5 - movieAvgRatings[m.movieId].intValue())}"></span>
+          </div>
+          <div class="winner-rating">
+            <span th:text="${#numbers.formatDecimal(movieAvgRatings[m.movieId], 1, 1)}"></span> / 5
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rest of the list -->
+    <div class="rest-section" th:if="${#lists.size(movieshow) > 3}">
+      <div class="section-divider">Other Top Movies</div>
+      <div th:each="m, iterStat : ${movieshow}" th:if="${iterStat.index >= 3}" class="rank-row">
+        <img class="profile-img" th:src="@{/getimagesok/{id}(id=${m.movieId})}" alt="movie image">
+        <div class="medal">
+          <span th:if="${movieMedals['GOLD'] == m.movieId}">🥇</span>
+          <span th:if="${movieMedals['SILVER'] == m.movieId}">🥈</span>
+          <span th:if="${movieMedals['BRONZE'] == m.movieId}">🥉</span>
+        </div>
+        <div class="details">
+          <div class="name" th:text="${m.movieName}"></div>
+          <div class="role">
+            <span th:text="${m.genre}"></span> | <span th:text="${m.language}"></span>
+          </div>
+          <div class="stars">
+            <span th:utext="${#strings.repeat('★', movieAvgRatings[m.movieId].intValue())}"></span>
+            <span th:utext="${#strings.repeat('☆', 5 - movieAvgRatings[m.movieId].intValue())}"></span>
+          </div>
+          <div class="rating-number">
+            <span th:text="${#numbers.formatDecimal(movieAvgRatings[m.movieId], 1, 1)}"></span> / 5
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTORS -->
+  <div id="actor" class="container-content" th:classappend="${tab=='actor'} ? ' active' : ''">
+    <div class="top-winners-section">
+      <div class="winners-wrapper">
+        <div th:each="p, iterStat : ${peopleshow}" th:if="${iterStat.index < 3}" class="winner-card"
+             th:classappend="${iterStat.index == 0 ? ' position-1' : iterStat.index == 1 ? ' position-2'  : ' position-3' }">
+          <div class="position-number" th:text="${iterStat.index + 1}"></div>
+          <div class="winner-avatar">
+            <img th:src="@{/getimagerevi/{pid}(pid=${p.pid})}" alt="person image">
+          </div>
+          <div class="winner-name" th:text="${p.peopleName}"></div>
+          <div class="winner-stars">
+            <span th:utext="${#strings.repeat('★', peopleAvgRatings[p.pid].intValue())}"></span>
+            <span th:utext="${#strings.repeat('☆', 5 - peopleAvgRatings[p.pid].intValue())}"></span>
+          </div>
+          <div class="winner-rating">
+            <span th:text="${#numbers.formatDecimal(peopleAvgRatings[p.pid], 1, 1)}"></span> / 5
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rest-section" th:if="${#lists.size(peopleshow) > 3}">
+      <div class="section-divider">Other Top Actors</div>
+      <div th:each="p, iterStat : ${peopleshow}" th:if="${iterStat.index >= 3}" class="rank-row">
+        <img class="profile-img" th:src="@{/getimagerevi/{pid}(pid=${p.pid})}" alt="person image">
+        <div class="medal">
+          <span th:if="${roleMedals['Actor']['GOLD'] == p.pid}">🥇</span>
+          <span th:if="${roleMedals['Actor']['SILVER'] == p.pid}">🥈</span>
+          <span th:if="${roleMedals['Actor']['BRONZE'] == p.pid}">🥉</span>
+        </div>
+        <div class="details">
+          <div class="name" th:text="${p.peopleName}"></div>
+          <div class="stars">
+            <span th:utext="${#strings.repeat('★', peopleAvgRatings[p.pid].intValue())}"></span>
+            <span th:utext="${#strings.repeat('☆', 5 - peopleAvgRatings[p.pid].intValue())}"></span>
+          </div>
+          <div class="rating-number">
+            <span th:text="${#numbers.formatDecimal(peopleAvgRatings[p.pid], 1, 1)}"></span> / 5
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTRESSES -->
+  <div id="actress" class="container-content" th:classappend="${tab=='actress'} ? ' active' : ''">
+    <div class="top-winners-section">
+      <div class="winners-wrapper">
+        <div th:each="p, iterStat : ${peopleshow}" th:if="${iterStat.index < 3}" class="winner-card"
+             th:classappend="${iterStat.index == 0 ? ' position-1' : iterStat.index == 1 ? ' position-2'  : ' position-3' }">
+          <div class="position-number" th:text="${iterStat.index + 1}"></div>
+          <div class="winner-avatar">
+            <img th:src="@{/getimagerevi/{pid}(pid=${p.pid})}" alt="person image">
+          </div>
+          <div class="winner-name" th:text="${p.peopleName}"></div>
+          <div class="winner-stars">
+            <span th:utext="${#strings.repeat('★', peopleAvgRatings[p.pid].intValue())}"></span>
+            <span th:utext="${#strings.repeat('☆', 5 - peopleAvgRatings[p.pid].intValue())}"></span>
+          </div>
+          <div class="winner-rating">
+            <span th:text="${#numbers.formatDecimal(peopleAvgRatings[p.pid], 1, 1)}"></span> / 5
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rest-section" th:if="${#lists.size(peopleshow) > 3}">
+      <div class="section-divider">Other Top Actresses</div>
+      <div th:each="p, iterStat : ${peopleshow}" th:if="${iterStat.index >= 3}" class="rank-row">
+        <img class="profile-img" th:src="@{/getimagerevi/{pid}(pid=${p.pid})}" alt="person image">
+        <div class="medal">
+          <span th:if="${roleMedals['Actress']['GOLD'] == p.pid}">🥇</span>
+          <span th:if="${roleMedals['Actress']['SILVER'] == p.pid}">🥈</span>
+          <span th:if="${roleMedals['Actress']['BRONZE'] == p.pid}">🥉</span>
+        </div>
+        <div class="details">
+          <div class="name" th:text="${p.peopleName}"></div>
+          <div class="stars">
+            <span th:utext="${#strings.repeat('★', peopleAvgRatings[p.pid].intValue())}"></span>
+            <span th:utext="${#strings.repeat('☆', 5 - peopleAvgRatings[p.pid].intValue())}"></span>
+          </div>
+          <div class="rating-number">
+            <span th:text="${#numbers.formatDecimal(peopleAvgRatings[p.pid], 1, 1)}"></span> / 5
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTORS -->
+  <div id="director" class="container-content" th:classappend="${tab=='director'} ? ' active' : ''">
+    <div class="top-winners-section">
+      <div class="winners-wrapper">
+        <div th:each="p, iterStat : ${peopleshow}" th:if="${iterStat.index < 3}" class="winner-card"
+             th:classappend="${iterStat.index == 0 ? ' position-1' : iterStat.index == 1 ? ' position-2'  : ' position-3' }">
+          <div class="position-number" th:text="${iterStat.index + 1}"></div>
+          <div class="winner-avatar">
+            <img th:src="@{/getimagerevi/{pid}(pid=${p.pid})}" alt="person image">
+          </div>
+          <div class="winner-name" th:text="${p.peopleName}"></div>
+          <div class="winner-stars">
+            <span th:utext="${#strings.repeat('★', peopleAvgRatings[p.pid].intValue())}"></span>
+            <span th:utext="${#strings.repeat('☆', 5 - peopleAvgRatings[p.pid].intValue())}"></span>
+          </div>
+          <div class="winner-rating">
+            <span th:text="${#numbers.formatDecimal(peopleAvgRatings[p.pid], 1, 1)}"></span>
