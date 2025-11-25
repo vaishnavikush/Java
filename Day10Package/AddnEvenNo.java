@@ -19,5 +19,5 @@ public class AddnEvenNo {
         }
         System.out.println(total);
     }
-
 }
+
